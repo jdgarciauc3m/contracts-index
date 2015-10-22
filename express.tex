@@ -1,0 +1,76 @@
+\section{Expressing checks}
+
+\begin{frame}[t,fragile]{How do I express contracts?}
+\begin{itemize}
+  \item Today operator[] is std::vector is roughly (taken for existing implementation).
+\end{itemize}
+\begin{block}{Current implementation}
+\begin{lstlisting}
+T & vector::operator[](size_t pos) noexcept
+{
+  return buf + pos;
+}
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item Today this function never throws.
+  \item It is marked as \cppkey{noexcept}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{After Tuesday}
+\begin{block}{Option A}
+\begin{lstlisting}
+T & myvector::operator[](size_t pos) noexcept
+  [[expects: 0<= pos && pos < size()]]
+{
+  return buf[pos];
+}
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item If called out of contract the single global handler is called.
+  \item The function is marked as \cppkey{noexcept}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Checking in the body}
+\begin{itemize}
+ \item I could still decide to have an implementation assert. 
+ \item \textbf{Note}: in that case we decided that this cannot throw. 
+\end{itemize}
+\begin{block}{Option B}
+\begin{lstlisting}
+T & myvector::operator[](size_t pos) noexcept
+{
+  [[check: 0<= pos && pos < size()]]
+  return buf[pos];
+}
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item As we have a single global handler, even if we allowed throwing the problem
+would not be solved. 
+  \item Consequently the function is still noexcept.
+  \item Besides static analysis would be limited for non-template non-inline.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Throwing an exception}
+\begin{itemize}
+  \item We might want to have an implementation with at()-style:
+\end{itemize}
+\begin{block}{Option C}
+\begin{lstlisting}
+T & myvector::operator[](size_t pos)
+{
+  if (0>pos || pos>=size())) throw out_of_range{};
+  return buf[pos];
+}
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item This would be certainly \cppkey{noexcept(false)}.
+  \item But this always throws and looses the benfits from static analysis.
+\end{itemize}
+\end{frame}

@@ -1,0 +1,34 @@
+\section{Questions}
+
+\begin{frame}[t]{Monday meeting outcome}
+\begin{itemize}
+  \item Precondition handlers must not throw and preconditions can be used on noexcept functions.
+    \begin{itemize}
+      \item SF:12 F:5 N:0 A:2 SA:2
+    \end{itemize}
+
+  \vfill
+  \item Preconditions handlers may throw and functions with preconditions must not be noexcept.
+    \begin{itemize}
+      \item SF:2 F:1 N:5 A:3 SA:9
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Use case}
+\begin{itemize}
+  \item How do I use contracts to write bounds-check contract on this subscript operation?
+\end{itemize}
+\begin{lstlisting}
+T & vector::operator[](size_t pos)
+{
+  return buf[pos];
+}
+\end{lstlisting}
+\pause
+\begin{enumerate}
+  \item How do I express a range check that \cppid{0} \cppkey{<=} \cppid{pos} \cppkey{<=} \cppkey{this->}\cppid{size}?
+  \item How do I decide whether the funcion should be noexcept?
+  \item How do I select whole program checking violations handling?
+\end{enumerate}
+\end{frame}

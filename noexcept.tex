@@ -1,0 +1,53 @@
+\section{Being noexcept}
+
+\begin{frame}[t]{Questions}
+\begin{itemize}
+  \item \textbf{Q}: 
+        How do I decide if this should be noexcept?
+    \begin{itemize}
+      \item \textbf{Answer}: 
+            If it has a precondition then the function can be safely marked as noexcept.
+    \end{itemize}
+
+  \vfill\pause
+  \item \textbf{Q}: 
+      Without contracts how would we want to make it noexcept today?
+    \begin{itemize}
+      \item \textbf{Answer}: 
+            An existing implementation marks it as noexcept.
+    \end{itemize}
+
+  \vfill\pause
+  \item \textbf{Q}: 
+        Does the answer change with contracts?
+    \begin{itemize}
+      \item \textbf{Answer}: 
+            No.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Throwing exceptions}
+\begin{itemize}
+  \item Is there an alternative for being able to throw an exception?
+\end{itemize}
+\begin{block}{Option D}
+\begin{lstlisting}[basicstyle=\footnotesize]
+T & myvector::operator[](size_t pos)
+  [[expects(out_of_range{}): 0<= pos && pos < size()]]
+{
+  return buf[pos];
+}
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item When the precondition is
+        not satisified, then you want to \cppkey{throw} \cppid{out\_of\_range\{\}}.
+
+  \item You will not be able mark the function as \cppkey{noexcept}. 
+
+  \item Shortcut for option C, but allowing static analysis. 
+
+  \item This can be combined with handler or not.
+\end{itemize}
+\end{frame}

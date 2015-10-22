@@ -1,0 +1,47 @@
+\section{Checking violation hadling}
+
+\begin{frame}[t]{Questions}
+\begin{itemize}
+  \item \textbf{Q}:
+        How do we select a fail-fast with no further execution?
+    \begin{itemize}
+      \item \textbf{Answer}:
+            This is equivalent to an empty handler marked as \cppkey{[[noreturn]]} or perhaps calling to \cppid{terminate()}.
+    \end{itemize}
+
+  \vfill\pause
+  \item \textbf{Q}:
+        How do we select other handler?
+    \begin{itemize}
+      \item \textbf{Answer}:
+      This is equivalent to a non-empty handler marked as \cppkey{[[noreturn]]} or we can define that after the handler \cppid{terminate()} is invoked.
+    \end{itemize}
+
+  \vfill\pause
+  \item \textbf{Q}:
+        How do we select throwing an exception?
+    \begin{itemize}
+      \item \textbf{Answer}:
+            This would only lead to throwing a single global exception. This is what Ada2012 does. If we take the route D, this is not needed.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Questions}
+\begin{itemize}
+  \item \textbf{Q}:
+        Do fail-fast or handler require different user code?
+    \begin{itemize}
+      \item \textbf{Answer}:
+            No. In both cases they would be noexcept operations. Consequently, \cppkey{noexcept}\cppid{(vec[i])} would be true all the time.
+    \end{itemize}
+
+  \vfill\pause
+  \item \textbf{Q}:
+        What if I want to throw?
+    \begin{itemize}
+      \item \textbf{Answer}:
+            You may option Option D and specify the exception you want to throw which is a design decision.
+    \end{itemize}
+\end{itemize}
+\end{frame}
