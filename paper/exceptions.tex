@@ -1,0 +1,49 @@
+\section{Being able to throw}
+
+As previously stated being able to throw on contract violation is essential for
+some approaches, while cannot be afforded in some other use cases. 
+
+\subsection{Throwing contract}
+
+A possible solution is to be able to express a throwing contract. Following our
+example:
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos)
+[[expects(bounds_error{}): 0<=pos && pos <=size()]]
+{
+  return buf[pos];
+}
+\end{lstlisting}
+
+While this was the syntax originally suggested during the 2015 Kona meeting, a
+more generalized one can be achieved by adding an \cppkey{effect} attribute.
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos)
+[[expects: 0<=pos && pos <=size(), effect:throw bounds_error{pos,size}]]
+{
+  return buf[pos];
+}
+\end{lstlisting}
+
+Regardless the syntax, whenever there is a precondition violation the exception
+is thrown. In this case the operation is not marked as \cppkey{noexcept}.
+
+\subsubsection{Effects on contract violation}
+
+When the build mode is terminating (fail-fast or terminate), the precondition
+violation still implies program termination. Although this might seen as
+counter-intuitive it is essential to support those application domains that
+cannot afford to make use of exceptions.
+
+When the build mode is a throwing build mode an exception will be thrown. In the
+case of specified exception mode, the specific \cppid{bounds\_error} exception
+is thrown. If the application is built with an application wide exception mode,
+then that exception takes precedence over the specific one.
+
+If the application is built with the resuming handler mode, then the handler is
+executed and the exception is thrown, preventing the application to really
+resume.

@@ -1,0 +1,106 @@
+\section{Expressing contracts}
+
+\subsection{Existing practice}
+
+I start by examining \cppid{vector::}\cppkey{operator}\cppid{[]} in some popular
+implementation of the standard library. The code is roughly the following:
+
+\begin{lstlisting}
+template <typename T>
+T & vector::operator[](size_t pos) noexcept
+{
+  return buf + pos;
+}
+\end{lstlisting}
+
+Firstly, the operation is marked as \cppkey{noexcept}. Even, if the standard
+does not require the operation to be marked as \cppkey{noexcept},
+implementations are given the freedom to add this specifier. Secondly, the
+operation never throws. In fact, the source code for the debug version is
+slightly different and it lives in a different source file (as the the debug
+version of the data structure is also different).
+
+\begin{lstlisting}
+template <typename T>
+T & vector::operator[](size_t pos) noexcept
+{
+  check_subscript(pos);
+  return buf + pos;
+}
+\end{lstlisting}
+
+\subsection{A simple contract}
+
+With contracts a class my express its expectations through a precondition.
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos) noexcept
+[[expects: 0 <= pos && pos < size()]] 
+{
+  return buf[pos];
+}
+\end{lstlisting}
+
+In this example the contract is part of the function declaration and is visible
+to its callers. A key derived property is that the precondition is available to
+the caller and consequently to any static analysis tool even if the
+implementation code is not available. In this specific case, as the code is a
+\cppkey{template} the source code is always available. However, there might be
+cases for non-templated code where the implementation is only distributed in
+binary format.
+
+\subsubsection{Effects on contract violation}
+
+When the build mode is terminating (fail-fast or terminate) the precondition
+violation implies program termination. 
+
+For a resuming handler build mode, the effect in this case would be rather catastrophic as
+the operation would then be returning a dangling reference.
+
+Finally, in a the case of a throwing build mode, the effect would be equally
+termination as the operation has been marked as \cppkey{noexcept}.
+
+\subsection{Implementation contracts}
+
+A different strategy would be using contracts in function bodies. There might be
+multiple reasons for a developer to do so. Firstly, some contracts might be
+expressed with a lower complexity as the algorithm proceeds. Secondly, an
+implementation contract may make use of implementation details not available in
+the declaration.
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos) noexcept
+{
+  [[check: 0 <= pos && pos < size]] 
+  return buf[pos];
+}
+\end{lstlisting}
+
+As it has been stated earlier this approach would limit the static analysis in
+the case of non-inlined non-templated code.
+
+\subsubsection{Effects on contract violation}
+
+The effects would be here essentially the same that for the previous case of
+contracts in the declaration. The key point is that operation is \cppkey{noexcept}.
+
+\subsection{A throwing index operator}
+
+Another option to be considered is that I might want to have an index operator
+which throws when the index is out of bounds.
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos)
+{
+  if (0 > pos || pos >= size) throw bounds_error{};
+  return buf[pos];
+}
+\end{lstlisting}
+
+In this case, the operation is not marked to be \cppkey{noexcept} (i.e., it is
+\cppkey{noexcept(false)}). Obviously, this approach has drawbacks. The check is
+now unconditional (which is asking to be controlled by some macro). Besides, the
+precondition is now hidden from any static analysis tool.

@@ -1,0 +1,84 @@
+\section{Effects on contract violation}
+
+Multiple effects have been suggested when a contract is violated. It is extremely
+important to remark that the set of valid effects is highly dependent on the type
+of applications being used.
+
+In general the fact that a contract has been violated is a symptom that the
+program has a defect. That is, a contract is not violated because of any
+exogenous circumstance, but because the program is incorrectly using a function.
+
+\subsection{Fail-fast and termination}
+
+For some systems, once a defect has been detected the only thing that can be
+done is terminating the program. This is specially true for some safety critical
+applications and some real time systems.
+
+A minor difference here is whether the system can eventually perform some final
+operations in the form of a \cppid{terminate()} handler.
+
+\subsection{Handle and continue use case}
+
+There are use cases where what the application developer wants is to handle is
+some way the contract violation and the proceed with the program. A use case
+that has bee repeatedly reported by Bloomberg is the case where upon contract
+violation you may want to log the contract violation and proceed with the
+program execution.
+
+\subsection{Recovering from a software defect}
+
+There are also systems where after a contract violation the system may recover
+and continue. One typical example is when a program as a structure where
+plug-ins may be added to the application. In those cases, a defect in a certain
+plug-in should not stop the whole application but the specific faulty plug-in.
+
+Another example are applications that after a contract violation, still may want
+to cleanly save their state to a file and perform a regular cleanup.
+
+\subsection{Contracts and testing frameworks}
+
+Several unit testing frameworks use exceptions to notify that a test case has
+failed. This has been used sometimes to argue in favor of exceptions use to
+notify contract violation. However, a test case failure is different from a
+contract violation.
+
+In general, with some given testing approaches it is relevant to be able to
+throw an exception when a contract violation happens. This would allow to test
+the contracts themselves, invoking functions with unexpected inputs to check
+that the contract is able to correctly detect the violation.
+
+\subsection{Summary of options}
+
+Given this plethora of different use cases, the following options seem to be
+needed by some subset of users:
+
+\begin{itemize}
+  \item Be able to perform a fail-fast. Probably this could be achieved by just
+invoking \cppid{quick\_exit()}.
+  \item Be able to terminate the program invoking the corresponding
+\cppid{terminate\_handler()}.
+  \item Be able to invoke a handler function and the resume execution at the
+calling site.
+  \item Be able to report the violation by throwing an application wide
+exception (e.g. \cppid{contract\_violation}).
+  \item Be able to report the violation by throwing a specified exception (e.g.
+\cppid{out\_of\_bounds}).
+\end{itemize}
+
+This different behaviors could be specified by a build option. However, library
+writers still need the ability to specify two families of contracts:
+
+\begin{enumerate}
+
+  \item \textbf{Non-throwing contracts}: Contracts that independently of the
+build mode used will never throw. Those contracts are essential to be able to
+specify preconditions and postconditions for operations that still want to
+provide the \cppkey{noexcept} guarantee. The only valid effects for the
+violation of such contracts are some form of termination.
+
+  \item \textbf{Potentially throwing contracts}: Contracts that depending on the
+build mode may throw an exception. For these contracts if the build mode is to
+report throw exceptions the effect is throwing an exception. However, if the
+build mode is termination, they just terminate without throwing the exception.
+
+\end{enumerate}

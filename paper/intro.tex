@@ -1,0 +1,44 @@
+\section{Introduction}
+
+During the 2015 Kona meeting, Herb Sutter made three very interesting questions
+on contracts in order to facilitate discussions and make progress on a contracts
+proposal.
+
+The basic idea was to explore how could a proposal be used to eventually write a
+bounds check contract on the subscript operation. That is, given the a potential
+\cppid{myvector} class:
+
+\begin{lstlisting}
+template <class T>
+class myvector {
+  //...
+  T & operator[](size_t pos);
+  // ...
+private:
+  size_t size;
+  T * buf;
+};
+
+template <class T>
+T & myvector::operator[](size_t pos)
+{
+  return buf[pos];
+}
+\end{lstlisting}
+
+We want to answer the following questions:
+
+\begin{enumerate}
+  \item How do I express a range check that \cppid{0 <= pos
+< }\cppkey{this}\cppid{->size} ?
+  \item How do I decide whether the function should be noexcept?
+  \item How do I select the whole program violation handling?
+\end{enumerate}
+
+In this paper I explore possible answers to this questions using the proposed
+example to explore all of them.
+
+In particular, I pay attention to the tension between different uses of the
+contracts facility in different domains and its relationship to exceptions management.
+
+

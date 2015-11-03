@@ -1,0 +1,133 @@
+\section{Summary}
+
+As a summary, I explore different options to programmer in source code and the
+effects with each build mode.
+
+\subsection{Contract options}
+
+A programmer may express a contract as one of the following:
+
+\begin{itemize}
+  \item \textbf{Non-throwing contract}: A contract that guarantees not to
+throw. A violation of such contract always results in some sort of program
+termination.
+
+  \item \textbf{Potentially throwing contract}: A contract that might throw when
+the application is built in the appropriate mode.
+
+  \item \textbf{Throwing contract}: A contract where the programmer specifically
+requests to throw. The fact that an exception is thrown or not is still
+dependent on the specific build mode used.
+\end{itemize}
+
+\subsubsection{Non-throwing contract}
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos) noexcept
+[[expects: 0<=pos && pos < size()]]
+{
+  return buf[pos];
+}
+\end{lstlisting}
+
+\subsubsection{Potentially throwing contract}
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos) 
+[[expects: 0<=pos && pos < size()]]
+{
+  return buf[pos];
+}
+\end{lstlisting}
+
+\subsubsection{Throwing contract}
+
+\begin{lstlisting}
+template <typename T>
+T & myvector::operator[](int pos) 
+[[expects: 0<=pos && pos < size(), effect: throw bounds_error{pos,size()}]]
+{
+  return buf[pos];
+}
+\end{lstlisting}
+
+\subsection {Build modes}
+
+The following modes are considered:
+
+\begin{itemize}
+  \item \textbf{failfast}. The application terminates without further cleanup
+(e.g. calling \cppid{quick\_exit()}.
+  \item \textbf{terminate}. The application terminates invoking the
+corresponding \cppid{terminate\_handler}.
+  \item \textbf{resume}. The application invokes a system wide handler function
+and then proceeds execution.
+  \item \textbf{throw}. The application throws a system wide exception. This
+exception could be supplied to the build system or just a global predefined one
+(i.e. \cppid{broken\_contract}).
+  \item \textbf{throw-specific}. The application throws the exception specified
+in source code.
+\end{itemize}
+
+\subsubsection{Terminating modes}
+
+Modes \emph{failfast} and \emph{terminate} are essentially the same and,
+consequently, are studied here together. The only difference is that for
+\emph{terminate} mode, the termination includes the execution of a user supplied
+handler and proper cleanup.
+
+\begin{itemize}
+  \item Non-throwing contracts: The program terminates.
+  \item Potentially throwing contracts: The program terminates without invoking
+any exception.
+  \item Throwing contracts: The program terminates without invoking the user
+supplied exception.
+\end{itemize}
+
+\subsubsection{Resume mode}
+
+Mode \emph{resume} results in the execution of a user provided handler. The
+handler is supplied to the build system, and it is global for the whole
+application.
+
+\begin{itemize}
+  \item Non-throwing contracts: The program runs the resume handler but does not
+resume. Instead it invokes the \cppid{terminate} function.
+  \item Potentially throwing contracts: The program runs the resume handler and
+after that, it proceeds execution.
+  \item Throwing contracts: The program runs the resume handler and after that,
+it throw the exception supplied by the contract.
+\end{itemize}
+
+\subsubsection{Throwing mode}
+
+Mode \emph{throw} results in throwing a global exception. This might be a
+predefined exception (e.g. \cppid{broken\_contract}) or an exception supplied to
+the build system. In any case, the exception would be the same one for the whole
+application.
+
+\begin{itemize}
+  \item Non-throwing contracts: The program ignores the global exception and
+terminates by invoking the \cppid{terminate} function.
+  \item Potentially throwing contracts: The global exception is thrown.
+  \item Throwing contracts: The program ignores the global exception and the
+exception specified by the throwing contract is thrown.
+\end{itemize}
+
+\subsubsection{Throwing specific mode}
+
+Mode \emph{throw-specific} results in throwing the exception specified by the
+contract if any.
+
+\begin{itemize}
+  \item Non-throwing contracts: The program 
+terminates by invoking the \cppid{terminate} function.
+  \item Potentially throwing contracts: A global exception is thrown.
+  \item Throwing contracts: The 
+exception specified by the throwing contract is thrown.
+\end{itemize}
+
+Consequently, the modes \emph{throw} and \emph{throw-specific} can be merged
+into a single mode.
