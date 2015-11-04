@@ -59,11 +59,11 @@ The following modes are considered:
 
 \begin{itemize}
   \item \textbf{failfast}. The application terminates without further cleanup
-(e.g. calling \cppid{quick\_exit()}.
+(e.g. calling \cppid{quick\_exit()}).
   \item \textbf{terminate}. The application terminates invoking the
 corresponding \cppid{terminate\_handler}.
   \item \textbf{resume}. The application invokes a system wide handler function
-and then proceeds execution.
+which then may return to resume executing despite the contract violation.
   \item \textbf{throw}. The application throws a system wide exception. This
 exception could be supplied to the build system or just a global predefined one
 (i.e. \cppid{broken\_contract}).
