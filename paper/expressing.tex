@@ -9,7 +9,7 @@ implementation of the standard library. The code is roughly the following:
 template <typename T>
 T & vector::operator[](size_t pos) noexcept
 {
-  return buf + pos;
+  return *(buf + pos);
 }
 \end{lstlisting}
 
@@ -25,7 +25,7 @@ template <typename T>
 T & vector::operator[](size_t pos) noexcept
 {
   check_subscript(pos);
-  return buf + pos;
+  return *(buf + pos);
 }
 \end{lstlisting}
 
@@ -102,5 +102,4 @@ T & myvector::operator[](int pos)
 
 In this case, the operation is not marked to be \cppkey{noexcept} (i.e., it is
 \cppkey{noexcept(false)}). Obviously, this approach has drawbacks. The check is
-now unconditional (which is asking to be controlled by some macro). Besides, the
-precondition is now hidden from any static analysis tool.
+now unconditional (which is asking to be controlled by some macro). 
